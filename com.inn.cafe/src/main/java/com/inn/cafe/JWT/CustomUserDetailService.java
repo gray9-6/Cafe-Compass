@@ -1,6 +1,7 @@
 package com.inn.cafe.JWT;
 
 import com.inn.cafe.dao.UserRepository;
+import com.inn.cafe.pojo.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 
 @Service
@@ -24,9 +26,6 @@ public class CustomUserDetailService implements UserDetailsService {
         log.info("Inside loadUserByUsername() ",username );
 
         user = userRepository.findByEmailId(username);
-        if(user == null){
-            throw new RuntimeException("User doesn't exist");
-        }
 
         return new org.springframework.security.core.userdetails.User(user.getEmail(),
                 user.getPassword(),new ArrayList<>());

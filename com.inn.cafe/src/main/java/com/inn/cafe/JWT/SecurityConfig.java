@@ -7,7 +7,6 @@ package com.inn.cafe.JWT;
  * * */
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,26 +21,19 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig  {
 
     @Autowired
-    private JwtFilter jwtFilter;
-    @Value("${auth.type:JWT}")
-    private String authenticationType;
+    private JwtFilter jwtFilter;  // to add filter on jwt token
 
-
+    @Autowired
+    private JwtAuthenticationEntryPoint point;  // for exception handling
 
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider() {      // for database,
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -58,7 +50,11 @@ public class SecurityConfig  {
         return new BCryptPasswordEncoder();
     }
 
-
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
 //    @Bean
 //    protected SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -114,21 +110,13 @@ public class SecurityConfig  {
     public SecurityFilterChain getSecurityFilterChain(HttpSecurity httpSecurity) throws Exception{
 
         // csrf - cross site request forgery
-        httpSecurity.csrf().disable()
-                .authorizeHttpRequests()
-                .requestMatchers("/user/login","/user/signup","/user/forgotPassword")  // by pass
-                .permitAll()
-//                .requestMatchers("/student/**")
-//                .hasAnyRole("STUDENT","ADMIN")
-//                .requestMatchers("/admin/**")
-//                .hasRole("ADMIN")
-                .anyRequest()
-                .authenticated()
-                .and().exceptionHandling()
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-//                .formLogin();
+        httpSecurity.csrf(csrf->csrf.disable())
+                .cors(cors->cors.disable())
+                .authorizeHttpRequests(auth->
+                        auth.requestMatchers("/user/login","/user/signup","/user/forgotPassword").permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(ex-> ex.authenticationEntryPoint(point))
+                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));  // SessionCreationPolicy means, hume server par kuch store nahi karna hai
 
 
         // now we have to add Filter on the JWT Token

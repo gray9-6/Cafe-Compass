@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class UserTransformer {
 
+    // this method takes the UserResponseDto as input and gives the Uer as output
     public static User userResponseDtoToUser(UserResponseDto userResponseDto){
         return User.builder()
                 .name(userResponseDto.getName())
